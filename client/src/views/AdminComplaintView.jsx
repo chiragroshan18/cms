@@ -13,7 +13,9 @@ import {
   CheckCircle,
   MessageSquare,
   Paperclip,
-  Tag
+  Tag,
+  Menu,
+  X
 } from 'lucide-react';
 import { NeuButton } from '../components/ui/NeuButton';
 import { NeuInput } from '../components/ui/NeuInput';
@@ -27,8 +29,23 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
   const [complaints, setComplaints] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(() => {
+    return localStorage.getItem('adminSelectedComplaintId') || null;
+  });
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const { addToast } = useToast();
+
+  const handleSetSelectedComplaint = (comp) => {
+    setSelectedComplaint(comp);
+    if (comp && comp.id) {
+      localStorage.setItem('adminSelectedComplaintId', comp.id);
+      setSelectedComplaintId(comp.id);
+    } else {
+      localStorage.removeItem('adminSelectedComplaintId');
+      setSelectedComplaintId(null);
+    }
+  };
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +62,9 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
   useEffect(() => {
     fetchComplaints();
     fetchCategories();
+    if (selectedComplaintId) {
+      fetchComplaintDetails(selectedComplaintId);
+    }
   }, [searchQuery, statusFilter, priorityFilter, categoryFilter]);
 
   const fetchComplaints = async () => {
@@ -76,7 +96,7 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
     try {
       const res = await api.get(`/admin/complaints/${id}`);
       const comp = res.data.complaint;
-      setSelectedComplaint(comp);
+      handleSetSelectedComplaint(comp);
       setStatusForm({ status: comp.status, remark: '', resolution_description: comp.resolution_description || '' });
       setEditForm({
         priority: comp.priority,
@@ -84,6 +104,7 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
         resolution_description: comp.resolution_description || '',
       });
     } catch (err) {
+      handleSetSelectedComplaint(null);
       addToast('Error fetching complaint details.', 'error');
     }
   };
@@ -141,17 +162,28 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
       {/* Admin Sidebar Navigation */}
       <aside className="w-full md:w-64 bg-neu-bg neu-raised p-4 md:p-6 flex flex-col justify-between shrink-0 z-10">
         <div className="space-y-4 md:space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg shrink-0">
-              <ShieldCheck className="w-5 h-5 text-neu-primary" />
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg shrink-0">
+                <ShieldCheck className="w-5 h-5 text-neu-primary" />
+              </div>
+              <div className="truncate">
+                <h2 className="font-bold text-base tracking-tight leading-none truncate">CMS Admin</h2>
+                <span className="text-[10px] font-semibold text-neu-primary uppercase tracking-wider block">Management</span>
+              </div>
             </div>
-            <div className="truncate">
-              <h2 className="font-bold text-base tracking-tight leading-none truncate">CMS Admin</h2>
-              <span className="text-[10px] font-semibold text-neu-primary uppercase tracking-wider block">Management</span>
-            </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-neu neu-raised text-neu-text hover:neu-inset transition-all"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
 
-          <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+          <nav className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col gap-2`}>
             {[
               { id: 'dashboard', label: 'Executive Overview', icon: LayoutDashboard },
               { id: 'complaints', label: 'Manage Complaints', icon: ListFilter },
@@ -165,9 +197,10 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
                   key={item.id}
                   onClick={() => {
                     setActiveTab(item.id);
-                    setSelectedComplaint(null);
+                    handleSetSelectedComplaint(null);
+                    setMobileMenuOpen(false);
                   }}
-                  className={`flex-1 md:w-full flex items-center gap-2.5 px-3 md:px-4 py-2.5 md:py-3 rounded-neu text-xs md:text-sm font-medium transition-all shrink-0 whitespace-nowrap ${
+                  className={`w-full flex items-center gap-2.5 px-3 md:px-4 py-2.5 md:py-3 rounded-neu text-xs md:text-sm font-medium transition-all shrink-0 whitespace-nowrap ${
                     isActive
                       ? 'neu-inset text-neu-primary font-bold'
                       : 'hover:neu-raised-sm text-neu-muted hover:text-neu-text'
@@ -181,7 +214,7 @@ export function AdminComplaintView({ admin, onLogout, activeTab, setActiveTab })
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-neu-muted/20">
+        <div className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block pt-4 md:pt-6 border-t border-neu-muted/20 mt-4 md:mt-0`}>
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-neu text-xs font-semibold text-neu-danger hover:neu-inset-sm transition-all"

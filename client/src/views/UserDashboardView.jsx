@@ -16,7 +16,9 @@ import {
   Paperclip,
   Send,
   Lock,
-  Edit2
+  Edit2,
+  Menu,
+  X
 } from 'lucide-react';
 import { NeuButton } from '../components/ui/NeuButton';
 import { NeuInput } from '../components/ui/NeuInput';
@@ -28,12 +30,38 @@ import { useToast } from '../components/ui/Toast';
 import api from '../api/axios';
 
 export function UserDashboardView({ user, onLogout }) {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'submit' | 'complaints' | 'profile'
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('userActiveTab') || 'dashboard';
+  }); // 'dashboard' | 'submit' | 'complaints' | 'profile'
+
+  const [selectedComplaintId, setSelectedComplaintId] = useState(() => {
+    return localStorage.getItem('userSelectedComplaintId') || null;
+  });
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [complaints, setComplaints] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const { addToast } = useToast();
+
+  const handleSetActiveTab = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('userActiveTab', tab);
+    setMobileMenuOpen(false);
+  };
+
+  const handleSetSelectedComplaint = (comp) => {
+    setSelectedComplaint(comp);
+    if (comp && comp.id) {
+      localStorage.setItem('userSelectedComplaintId', comp.id);
+      setSelectedComplaintId(comp.id);
+    } else {
+      localStorage.removeItem('userSelectedComplaintId');
+      setSelectedComplaintId(null);
+    }
+  };
 
   // Filters & Search for "My Complaints"
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +95,9 @@ export function UserDashboardView({ user, onLogout }) {
 
   useEffect(() => {
     fetchData();
+    if (selectedComplaintId) {
+      fetchComplaintDetails(selectedComplaintId);
+    }
   }, []);
 
   const fetchData = async () => {
@@ -88,8 +119,9 @@ export function UserDashboardView({ user, onLogout }) {
   const fetchComplaintDetails = async (id) => {
     try {
       const res = await api.get(`/complaints/${id}`);
-      setSelectedComplaint(res.data.complaint);
+      handleSetSelectedComplaint(res.data.complaint);
     } catch (err) {
+      handleSetSelectedComplaint(null);
       addToast('Error fetching complaint details.', 'error');
     }
   };
@@ -174,17 +206,28 @@ export function UserDashboardView({ user, onLogout }) {
       {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 bg-neu-bg neu-raised p-4 md:p-6 flex flex-col justify-between shrink-0 z-10">
         <div className="space-y-4 md:space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg shrink-0">
-              C
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg shrink-0">
+                C
+              </div>
+              <div className="truncate">
+                <h2 className="font-bold text-base tracking-tight leading-none truncate">CMS User</h2>
+                <span className="text-[10px] font-semibold text-neu-muted uppercase tracking-wider block">Portal</span>
+              </div>
             </div>
-            <div className="truncate">
-              <h2 className="font-bold text-base tracking-tight leading-none truncate">CMS User</h2>
-              <span className="text-[10px] font-semibold text-neu-muted uppercase tracking-wider block">Portal</span>
-            </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-neu neu-raised text-neu-text hover:neu-inset transition-all"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
 
-          <nav className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+          <nav className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col gap-2`}>
             {[
               { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
               { id: 'submit', label: 'Submit Complaint', icon: PlusCircle },
@@ -197,11 +240,11 @@ export function UserDashboardView({ user, onLogout }) {
                 <button
                   key={item.id}
                   onClick={() => {
-                    setActiveTab(item.id);
-                    setSelectedComplaint(null);
+                    handleSetActiveTab(item.id);
+                    handleSetSelectedComplaint(null);
                     setSubmittedId(null);
                   }}
-                  className={`flex-1 md:w-full flex items-center gap-2.5 px-3 md:px-4 py-2.5 md:py-3 rounded-neu text-xs md:text-sm font-medium transition-all shrink-0 whitespace-nowrap ${
+                  className={`w-full flex items-center gap-2.5 px-3 md:px-4 py-2.5 md:py-3 rounded-neu text-xs md:text-sm font-medium transition-all shrink-0 whitespace-nowrap ${
                     isActive
                       ? 'neu-inset text-neu-primary font-bold'
                       : 'hover:neu-raised-sm text-neu-muted hover:text-neu-text'
@@ -215,7 +258,7 @@ export function UserDashboardView({ user, onLogout }) {
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-neu-muted/20">
+        <div className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block pt-4 md:pt-6 border-t border-neu-muted/20 mt-4 md:mt-0`}>
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-neu text-xs font-semibold text-neu-danger hover:neu-inset-sm transition-all"
@@ -275,7 +318,7 @@ export function UserDashboardView({ user, onLogout }) {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold">Recent Complaints</h3>
                   <button
-                    onClick={() => setActiveTab('complaints')}
+                    onClick={() => handleSetActiveTab('complaints')}
                     className="text-xs text-neu-primary font-semibold hover:underline"
                   >
                     View All
@@ -291,7 +334,7 @@ export function UserDashboardView({ user, onLogout }) {
                   <NeuCard className="text-center py-8">
                     <p className="text-xs text-neu-muted">You haven't submitted any complaints yet.</p>
                     <NeuButton
-                      onClick={() => setActiveTab('submit')}
+                      onClick={() => handleSetActiveTab('submit')}
                       variant="primary"
                       size="sm"
                       className="mt-4"
@@ -313,7 +356,7 @@ export function UserDashboardView({ user, onLogout }) {
                           hoverable
                           onClick={() => {
                             fetchComplaintDetails(c.id);
-                            setActiveTab('complaints');
+                            handleSetActiveTab('complaints');
                           }}
                           className="flex items-center justify-between py-4 px-5"
                         >
@@ -372,7 +415,7 @@ export function UserDashboardView({ user, onLogout }) {
                     <NeuButton
                       onClick={() => {
                         setSubmittedId(null);
-                        setActiveTab('complaints');
+                        handleSetActiveTab('complaints');
                       }}
                       variant="primary"
                       size="sm"
@@ -480,7 +523,7 @@ export function UserDashboardView({ user, onLogout }) {
                 /* --- COMPLAINT DETAILS VIEW --- */
                 <div className="space-y-6">
                   <button
-                    onClick={() => setSelectedComplaint(null)}
+                    onClick={() => handleSetSelectedComplaint(null)}
                     className="text-xs text-neu-muted hover:text-neu-text inline-flex items-center gap-1 font-semibold"
                   >
                     <ArrowLeft className="w-4 h-4" /> Back to My Complaints

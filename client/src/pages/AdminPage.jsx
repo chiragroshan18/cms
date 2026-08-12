@@ -21,7 +21,14 @@ export default function AdminPage() {
     }
     return null;
   });
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTabState] = useState(() => {
+    return localStorage.getItem('adminActiveTab') || 'dashboard';
+  });
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    localStorage.setItem('adminActiveTab', tab);
+  };
 
   useEffect(() => {
     document.title = 'CMS - Admin Portal';
@@ -36,6 +43,8 @@ export default function AdminPage() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem('adminActiveTab');
+    localStorage.removeItem('adminSelectedComplaintId');
     setAdminUser(null);
   };
 

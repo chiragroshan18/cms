@@ -9,7 +9,9 @@ import {
   Lock,
   Tag,
   Plus,
-  Trash2
+  Trash2,
+  Menu,
+  X
 } from 'lucide-react';
 import { NeuButton } from '../components/ui/NeuButton';
 import { NeuInput } from '../components/ui/NeuInput';
@@ -22,6 +24,7 @@ export function AdminDashboardView({ admin, onLogout, activeTab, setActiveTab })
   const [stats, setStats] = useState(null);
   const [recentComplaints, setRecentComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { addToast } = useToast();
 
   // Admin Profile Change Password state
@@ -99,19 +102,30 @@ export function AdminDashboardView({ admin, onLogout, activeTab, setActiveTab })
   return (
     <div className="min-h-screen bg-neu-bg text-neu-text flex flex-col md:flex-row">
       {/* Admin Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-neu-bg neu-raised p-6 flex flex-col justify-between shrink-0 z-10">
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg">
-              <ShieldCheck className="w-5 h-5 text-neu-primary" />
+      <aside className="w-full md:w-64 bg-neu-bg neu-raised p-4 md:p-6 flex flex-col justify-between shrink-0 z-10">
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-neu neu-inset flex items-center justify-center text-neu-primary font-bold text-lg shrink-0">
+                <ShieldCheck className="w-5 h-5 text-neu-primary" />
+              </div>
+              <div className="truncate">
+                <h2 className="font-bold text-base tracking-tight leading-none truncate">Admin Panel</h2>
+                <span className="text-[10px] font-semibold text-neu-muted uppercase tracking-wider block">System Control</span>
+              </div>
             </div>
-            <div>
-              <h2 className="font-bold text-base tracking-tight leading-none">Admin Panel</h2>
-              <span className="text-[10px] font-semibold text-neu-muted uppercase tracking-wider">System Control</span>
-            </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-neu neu-raised text-neu-text hover:neu-inset transition-all"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
 
-          <nav className="space-y-2">
+          <nav className={`${mobileMenuOpen ? 'flex' : 'hidden'} md:flex flex-col gap-2`}>
             {[
               { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
               { id: 'complaints', label: 'Manage Complaints', icon: ListFilter },
@@ -123,7 +137,10 @@ export function AdminDashboardView({ admin, onLogout, activeTab, setActiveTab })
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileMenuOpen(false);
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-neu text-sm font-medium transition-all ${
                     isActive
                       ? 'neu-inset text-neu-primary font-bold'
@@ -138,7 +155,7 @@ export function AdminDashboardView({ admin, onLogout, activeTab, setActiveTab })
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-neu-muted/20">
+        <div className={`${mobileMenuOpen ? 'block' : 'hidden'} md:block pt-4 md:pt-6 border-t border-neu-muted/20 mt-4 md:mt-0`}>
           <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-neu text-xs font-semibold text-neu-danger hover:neu-inset-sm transition-all"
