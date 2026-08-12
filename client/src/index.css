@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neu-bg: #e6e8ec;
+  --color-neu-surface: #e6e8ec;
+  --color-neu-flat: #e6e8ec;
+  --color-neu-dark: #1e2229;
+  --color-neu-light: #ffffff;
+  --color-neu-text: #2d3748;
+  --color-neu-muted: #718096;
+  --color-neu-primary: #4f46e5;
+  --color-neu-primary-hover: #4338ca;
+  --color-neu-accent: #06b6d4;
+  --color-neu-danger: #ef4444;
+  --color-neu-success: #10b981;
+  --color-neu-warning: #f59e0b;
+
+  --shadow-neu-flat: 6px 6px 12px #c3c5c8, -6px -6px 12px #ffffff;
+  --shadow-neu-flat-sm: 3px 3px 6px #c3c5c8, -3px -3px 6px #ffffff;
+  --shadow-neu-pressed: inset 4px 4px 8px #c3c5c8, inset -4px -4px 8px #ffffff;
+  --shadow-neu-pressed-sm: inset 2px 2px 4px #c3c5c8, inset -2px -2px 4px #ffffff;
+  --shadow-neu-hover: 8px 8px 16px #bcbece, -8px -8px 16px #ffffff;
+  --shadow-neu-glow: 0 0 15px rgba(79, 70, 229, 0.4);
+
+  --radius-neu: 1rem;
+  --radius-neu-lg: 1.5rem;
+  --radius-neu-sm: 0.5rem;
+}
+
+body {
+  background-color: #e6e8ec;
+  color: #2d3748;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  min-height: 100vh;
+}
+
+/* Neumorphic utility classes */
+.neu-raised {
+  background: #e6e8ec;
+  box-shadow: 6px 6px 12px #c3c5c8, -6px -6px 12px #ffffff;
+}
+
+.neu-raised-sm {
+  background: #e6e8ec;
+  box-shadow: 3px 3px 6px #c3c5c8, -3px -3px 6px #ffffff;
+}
+
+.neu-inset {
+  background: #e6e8ec;
+  box-shadow: inset 4px 4px 8px #c3c5c8, inset -4px -4px 8px #ffffff;
+}
+
+.neu-inset-sm {
+  background: #e6e8ec;
+  box-shadow: inset 2px 2px 4px #c3c5c8, inset -2px -2px 4px #ffffff;
+}

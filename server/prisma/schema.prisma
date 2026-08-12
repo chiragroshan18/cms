@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ComplaintStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id            String      @id @default(uuid())
+  name          String
+  email         String      @unique
+  phone         String?
+  password_hash String
+  role          Role        @default(USER)
+  is_active     Boolean     @default(true)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  complaints    Complaint[] @relation("UserComplaints")
+
+  @@map("users")
+}
+
+model Category {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String?
+  is_active   Boolean     @default(true)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  complaints  Complaint[]
+
+  @@map("categories")
+}
+
+model Complaint {
+  id                     String                   @id @default(uuid())
+  complaint_number       String                   @unique
+  user_id                String
+  category_id            String
+  title                  String
+  description            String
+  location               String?
+  priority               Priority                 @default(MEDIUM)
+  status                 ComplaintStatus          @default(PENDING)
+  attachment_url         String?
+  assigned_to            String?
+  admin_remark           String?
+  resolution_description String?
+  submitted_at           DateTime                 @default(now())
+  assigned_at            DateTime?
+  resolved_at            DateTime?
+  closed_at              DateTime?
+  updated_at             DateTime                 @updatedAt
+
+  user                   User                     @relation("UserComplaints", fields: [user_id], references: [id], onDelete: Cascade)
+  category               Category                 @relation(fields: [category_id], references: [id])
+  status_history         ComplaintStatusHistory[]
+
+  @@map("complaints")
+}
+
+model ComplaintStatusHistory {
+  id           String          @id @default(uuid())
+  complaint_id String
+  old_status   ComplaintStatus?
+  new_status   ComplaintStatus
+  changed_by   String
+  remark       String?
+  created_at   DateTime        @default(now())
+
+  complaint    Complaint       @relation(fields: [complaint_id], references: [id], onDelete: Cascade)
+
+  @@map("complaint_status_history")
+}
