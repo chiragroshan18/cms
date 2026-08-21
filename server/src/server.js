@@ -23,8 +23,8 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/admin', adminComplaintRoutes);
 app.use('/api/categories', categoryRoutes);
 
-// Root Welcome Route
-app.get('/', (req, res) => {
+// Root & /api Welcome Handlers
+const apiWelcomeHandler = (req, res) => {
   res.json({
     message: 'Welcome to Complaint Management System (CMS) REST API Server',
     status: 'online',
@@ -36,7 +36,10 @@ app.get('/', (req, res) => {
       categories: '/api/categories'
     }
   });
-});
+};
+
+app.get('/', apiWelcomeHandler);
+app.get('/api', apiWelcomeHandler);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
